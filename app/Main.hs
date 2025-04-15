@@ -1,5 +1,7 @@
 module Main where
 
+import Data.Char
+
 data INIValue
     = INIString String
     deriving(Show, Eq)
@@ -28,6 +30,20 @@ newtype Parser p
         parse :: String -> Either ParseError (String, p)
     }
 
+instance Functor Parser where
+    fmap f (Parser p) =
+        Parser $ \input -> do
+            (input', x) <- p input
+            Right (input', f x)
+
+instance Applicative Parser where
+    pure x =
+        Parser $ \input -> Right (input , x)
+    (Parser p1) <*> (Parser p2) =
+        Parser $ \input -> do
+        (input', f) <- p1 input
+        (input'', v) <- p2 input'
+        Right(input'', f v)
 
 charParser ::  Char -> Parser Char
 charParser c = Parser $ \input -> case input of
