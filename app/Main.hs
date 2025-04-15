@@ -1,6 +1,7 @@
 module Main where
 
 import Data.Char
+import Control.Applicative
 
 data INIValue
     = INIString String
@@ -44,6 +45,13 @@ instance Applicative Parser where
         (input', f) <- p1 input
         (input'', v) <- p2 input'
         Right(input'', f v)
+
+instance Alternative Parser where
+    empty = Parser $ \_ -> Left (ParseError 0 "Empty Parser")
+    (Parser p1) <|> (Parser p2) =
+        Parser $ \input -> case p1 input of
+            Right res -> Right res
+            Left _    -> p2 input
 
 charParser ::  Char -> Parser Char
 charParser c = Parser $ \input -> case input of
